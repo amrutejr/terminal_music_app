@@ -21,35 +21,51 @@ function showMenu() {
 `);
 }
 
+function play() {
+    console.log("Playing");
+}
+
+function pause() {
+    console.log("Paused");
+}
+
+function next() {
+    console.log("Next song");
+}
+
+function previous() {
+    console.log("Previous song");
+}
+
 function askUser() {
     rl.question("Choose an option: ", answer => {
 
         const choice = Number(answer);
 
         if (choice === 1) {
-            console.log("Playing");
+            play();
         }
 
         else if (choice === 2) {
-            console.log("Paused");
+            pause();
         }
 
         else if (choice === 3) {
-            console.log("Next");
+            next();
         }
 
         else if (choice === 4) {
-            console.log("Previous");
+            previous();
         }
 
         else if (choice === 5) {
-            console.log("Quiting...");
+            console.log("Goodbye!");
             rl.close();
             return;
         }
 
         else {
-            console.log("Invalid option, try again");
+            console.log("Invalid option");
         }
 
         showMenu();
