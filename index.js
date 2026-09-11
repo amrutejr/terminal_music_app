@@ -12,6 +12,7 @@ const songs = fs.readdirSync(path.join(__dirname, "music"))
 
 let currentSong = 0;
 let player = null;
+let isPaused = false;
 
 function showMenu() {
     console.log(`
@@ -30,15 +31,46 @@ function showMenu() {
 }
 
 function play() {
+    if (songs.length === 0) {
+        console.log("No songs found in the music folder.");
+        return;
+    }
+
+    if (player) {
+        player.kill();
+    }
+
     const songPath = path.join(__dirname, "music", songs[currentSong]);
 
-    player = spawn("mpv", [songPath]);
+    const newPlayer = spawn("mpv", [songPath]);
+    player = newPlayer;
+    isPaused = false;
+
+    newPlayer.once("close", () => {
+        if (player === newPlayer) {
+            player = null;
+            isPaused = false;
+        }
+    });
 
     console.log("Playing:", songs[currentSong]);
 }
 
 function pause() {
-    console.log("Paused");
+    if (!player) {
+        console.log("Nothing is playing");
+        return;
+    }
+
+    if (isPaused) {
+        player.kill("SIGCONT");
+        isPaused = false;
+        console.log("Resumed");
+    } else {
+        player.kill("SIGSTOP");
+        isPaused = true;
+        console.log("Paused");
+    }
 }
 
 function next() {
@@ -69,46 +101,63 @@ function previous() {
     play();
 }
 
-function askUser() {
-    rl.question("Choose an option: ", answer => {
+function enableKeyboardControls() {
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
 
-        const choice = Number(answer);
-
-        if (choice === 1) {
-            play();
-        }
-
-        else if (choice === 2) {
-            pause();
-        }
-
-        else if (choice === 3) {
-            next();
-        }
-
-        else if (choice === 4) {
-            previous();
-        }
-
-        else if (choice === 5) {
-            console.log("Goodbye!");
-
-            if (player) {
-                player.kill();
+    process.stdin.on("data", input => {
+        for (const key of input) {
+            if (key === " ") {
+                pause();
+            } else if (key.toLowerCase() === "n") {
+                next();
+            } else if (key.toLowerCase() === "p") {
+                previous();
+            } else if (key.toLowerCase() === "q" || key === "\u0003") {
+                quit();
             }
-
-            rl.close();
-            return;
         }
-
-        else {
-            console.log("Invalid option");
-        }
-
-        showMenu();
-        askUser();
     });
 }
 
+function quit() {
+    console.log("\nGoodbye!");
+
+    if (player) {
+        player.kill();
+    }
+
+    if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+    }
+
+    process.stdin.pause();
+    process.exit(0);
+}
+
 showMenu();
-askUser();
+rl.question("Choose an option: ", answer => {
+    const choice = Number(answer);
+
+    rl.close();
+
+    if (choice === 1) {
+        play();
+    } else if (choice === 2) {
+        pause();
+    } else if (choice === 3) {
+        next();
+    } else if (choice === 4) {
+        previous();
+    } else if (choice === 5) {
+        quit();
+        return;
+    } else {
+        console.log("Invalid option");
+        return;
+    }
+
+    console.log("Controls: Space = pause/resume, n = next, p = previous, q = quit");
+    enableKeyboardControls();
+});
