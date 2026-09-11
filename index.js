@@ -1,9 +1,17 @@
 const readline = require("readline");
-
+const fs = require("fs");
+const { spawn } = require("child_process");
+const path = require("path");
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
+
+const songs = fs.readdirSync(path.join(__dirname, "music"))
+    .filter(file => file.endsWith(".mp3"));
+
+let currentSong = 0;
+let player = null;
 
 function showMenu() {
     console.log(`
@@ -22,7 +30,11 @@ function showMenu() {
 }
 
 function play() {
-    console.log("Playing");
+    const songPath = path.join(__dirname, "music", songs[currentSong]);
+
+    player = spawn("mpv", [songPath]);
+
+    console.log("Playing:", songs[currentSong]);
 }
 
 function pause() {
@@ -30,11 +42,31 @@ function pause() {
 }
 
 function next() {
-    console.log("Next song");
+    if (player) {
+        player.kill();
+    }
+
+    currentSong++;
+
+    if (currentSong >= songs.length) {
+        currentSong = 0;
+    }
+
+    play();
 }
 
 function previous() {
-    console.log("Previous song");
+    if (player) {
+        player.kill();
+    }
+
+    currentSong--;
+
+    if (currentSong < 0) {
+        currentSong = songs.length - 1;
+    }
+
+    play();
 }
 
 function askUser() {
@@ -60,6 +92,11 @@ function askUser() {
 
         else if (choice === 5) {
             console.log("Goodbye!");
+
+            if (player) {
+                player.kill();
+            }
+
             rl.close();
             return;
         }
