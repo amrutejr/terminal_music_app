@@ -10,8 +10,9 @@ const rl = readline.createInterface({
 const songs = fs.readdirSync(path.join(__dirname, "music"))
     .filter(file => file.endsWith(".mp3"));
 
-let currentSong = 0;
 let player = null;
+let currentSong = 0;
+let manuallyStopped = false;
 let isPaused = false;
 
 function showMenu() {
@@ -37,20 +38,33 @@ function play() {
     }
 
     if (player) {
+        manuallyStopped = true;
         player.kill();
     }
 
     const songPath = path.join(__dirname, "music", songs[currentSong]);
 
+    manuallyStopped = false;
     const newPlayer = spawn("mpv", [songPath]);
     player = newPlayer;
     isPaused = false;
 
     newPlayer.once("close", () => {
-        if (player === newPlayer) {
-            player = null;
-            isPaused = false;
+        if (player !== newPlayer || manuallyStopped) {
+            return;
         }
+
+        player = null;
+        isPaused = false;
+        console.log("Song finished");
+
+        currentSong++;
+
+        if (currentSong >= songs.length) {
+            currentSong = 0;
+        }
+
+        play();
     });
 
     console.log("Playing:", songs[currentSong]);
@@ -74,6 +88,8 @@ function pause() {
 }
 
 function next() {
+    manuallyStopped = true;
+
     if (player) {
         player.kill();
     }
@@ -88,6 +104,8 @@ function next() {
 }
 
 function previous() {
+    manuallyStopped = true;
+
     if (player) {
         player.kill();
     }
