@@ -39,6 +39,21 @@ function showSongs() {
     });
 }
 
+function playSong(index) {
+    if (index < 0 || index >= songs.length) {
+        console.log("Invalid song");
+        return;
+    }
+
+    if (player) {
+        manuallyStopped = true;
+        player.kill();
+    }
+
+    currentSong = index;
+    play();
+}
+
 function play() {
     if (songs.length === 0) {
         console.log("No songs found in the music folder.");
@@ -142,6 +157,9 @@ function enableKeyboardControls() {
                 previous();
             } else if (key.toLowerCase() === "s") {
                 showSongs();
+            } else if (key >= "1" && key <= "9") {
+                const index = Number(key) - 1;
+                playSong(index);
             } else if (key.toLowerCase() === "q" || key === "\u0003") {
                 quit();
             }
@@ -186,6 +204,6 @@ rl.question("Choose an option: ", answer => {
         return;
     }
 
-    console.log("Controls: Space = pause/resume, n = next, p = previous, s = show songs, q = quit");
+    console.log("Controls: Space = pause/resume, n = next, p = previous, s = show songs, 1-9 = select song, q = quit");
     enableKeyboardControls();
 });
