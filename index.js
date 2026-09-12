@@ -31,6 +31,14 @@ function showMenu() {
 `);
 }
 
+function showSongs() {
+    console.log("\n🎵 Songs:\n");
+
+    songs.forEach((song, index) => {
+        console.log(`${index + 1}. ${song}`);
+    });
+}
+
 function play() {
     if (songs.length === 0) {
         console.log("No songs found in the music folder.");
@@ -132,6 +140,8 @@ function enableKeyboardControls() {
                 next();
             } else if (key.toLowerCase() === "p") {
                 previous();
+            } else if (key.toLowerCase() === "s") {
+                showSongs();
             } else if (key.toLowerCase() === "q" || key === "\u0003") {
                 quit();
             }
@@ -176,6 +186,6 @@ rl.question("Choose an option: ", answer => {
         return;
     }
 
-    console.log("Controls: Space = pause/resume, n = next, p = previous, q = quit");
+    console.log("Controls: Space = pause/resume, n = next, p = previous, s = show songs, q = quit");
     enableKeyboardControls();
 });
